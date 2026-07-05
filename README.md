@@ -126,6 +126,18 @@ Output: `dist\FluidVoice.exe` — a single portable executable.
 
 ---
 
+## Support & Donations
+
+If this Windows port makes your dictation workflow easier and saves you time, consider supporting its development:
+
+* **Ko-fi**: [ko-fi.com/huslermaniac](https://ko-fi.com/huslermaniac)
+* **Buy Me a Coffee**: [buymeacoffee.com/huslermaniac](https://www.buymeacoffee.com/huslermaniac)
+* **PayPal**: [paypal.me/huslermaniac](https://paypal.me/huslermaniac)
+
+Every contribution is greatly appreciated!
+
+---
+
 ## Attribution
 
 Original macOS app by [altic-dev](https://github.com/altic-dev/FluidVoice), licensed GPLv3.  
