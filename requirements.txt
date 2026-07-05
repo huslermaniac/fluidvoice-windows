@@ -1,0 +1,29 @@
+# FluidVoice Windows — Python Dependencies
+
+# UI
+customtkinter>=5.2.2
+Pillow>=10.0.0
+
+# System tray
+pystray>=0.19.5
+
+# Audio capture
+sounddevice>=0.4.6
+numpy>=1.24.0
+
+# Transcription
+faster-whisper>=1.0.3
+openai-whisper>=20231117
+
+# Global hotkey
+keyboard>=0.13.5
+
+# Text injection / clipboard
+pyperclip>=1.8.2
+pyautogui>=0.9.54
+
+# HTTP (AI enhancement)
+httpx>=0.27.0
+
+# Packaging (install separately for build)
+# pyinstaller>=6.0.0

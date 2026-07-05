@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Compilation outputs
+build/
+dist/
+*.spec
+
+# Whisper models (very large, should not go to GitHub)
+models/
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# User settings and app data caches (if run locally)
+.idea/
+.vscode/
+.history/
+*.log
