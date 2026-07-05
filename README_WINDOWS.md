@@ -3,6 +3,8 @@
 Open-source voice-to-text dictation for Windows, powered by OpenAI Whisper.  
 This is a Windows port of [FluidVoice](https://github.com/altic-dev/FluidVoice) (originally macOS/Swift).
 
+> ⚠️ **Project Status:** The core dictation pipeline, model downloader, transparent overlay, and text injection features are working. However, this is an early port and not all features or advanced settings combinations have been entirely tested yet. Contributions, feedback, and bug reports are welcome!
+
 ---
 
 ## Features
