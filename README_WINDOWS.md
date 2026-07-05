@@ -28,6 +28,12 @@ This is a Windows port of [FluidVoice](https://github.com/altic-dev/FluidVoice) 
 * **Microphone**: Any hardware input device
 * **Disk Space**: ~150 MB for the default Base model (up to 3 GB for Large model configurations)
 
+### Verified Test Rig Specs
+* **OS**: Windows 11 Pro
+* **CPU**: AMD Ryzen 9 3900XT (12 Cores, 24 Threads)
+* **GPU**: ASUS ROG Strix Radeon RX 6700 XT (12GB VRAM)
+* **RAM**: 64 GB DDR4 @ 3600MHz
+
 ---
 
 ## Quick Start
