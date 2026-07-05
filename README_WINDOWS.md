@@ -17,14 +17,16 @@ This is a Windows port of [FluidVoice](https://github.com/altic-dev/FluidVoice) 
 
 ---
 
-## Requirements
+## Requirements & Tested System Configurations
 
-- Windows 10 / 11
-- Python 3.11 or newer
-- ~150 MB disk space for the default (Base) Whisper model
-- A microphone
-
-> **GPU acceleration:** Optional. Install CUDA 12.x + the CUDA version of CTranslate2 for faster transcription on NVIDIA GPUs.
+* **Operating System**: Windows 10 / 11 (**Tested & verified on Windows 11 Pro**)
+* **Processor (CPU)**: Intel / AMD with AVX2 or AVX-512 (**Tested & verified on AMD Ryzen CPU**)
+  * *Features automatic Zen-generation CPU optimizations (Zen 2+).*
+* **Graphics (GPU)**: NVIDIA GPU with CUDA or AMD GPU / Vulkan (**Tested & verified on AMD GPU with Vulkan**)
+  * *Features automated fallback to highly-optimized CPU path on Vulkan/ROCm configurations.*
+* **Python**: Version 3.11 or newer
+* **Microphone**: Any hardware input device
+* **Disk Space**: ~150 MB for the default Base model (up to 3 GB for Large model configurations)
 
 ---
 
