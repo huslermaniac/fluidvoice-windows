@@ -135,4 +135,4 @@ This Windows port is an independent reimplementation using Python + faster-whisp
 
 ## License
 
-GPLv3 — see [LICENSE](../LICENSE).
+GPLv3 — see [LICENSE](LICENSE).
