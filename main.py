@@ -48,6 +48,7 @@ from history import history_store
 APP_NAME = "FluidVoice"
 APP_VERSION = "1.0.0"
 ICON_PATH = Path(__file__).parent / "assets" / "icon.png"
+TRAY_ICON_PATH = Path(__file__).parent / "assets" / "tray_icon.png"
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +154,8 @@ class FluidVoiceApp:
         t.start()
 
     def _load_tray_icon(self) -> Image.Image:
+        if TRAY_ICON_PATH.exists():
+            return Image.open(TRAY_ICON_PATH).resize((64, 64))
         if ICON_PATH.exists():
             return Image.open(ICON_PATH).resize((64, 64))
         # Generate a simple purple circle icon if no file exists
