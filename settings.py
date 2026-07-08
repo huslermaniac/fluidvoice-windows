@@ -81,6 +81,24 @@ DEFAULTS: dict[str, Any] = {
     "history_enabled": True,
     "history_max_entries": 500,
 
+    # Command Mode
+    "command_mode_enabled": False,
+    "command_mode_hotkey": "ctrl+alt+c",
+    "command_mode_provider": "openai",
+    "command_mode_model": "gpt-4o-mini",
+    "command_mode_sync": True,
+    "command_mode_confirm": False,
+
+    # Edit Mode (Rewrite)
+    "rewrite_mode_enabled": False,
+    "rewrite_mode_hotkey": "ctrl+alt+e",
+    "rewrite_mode_provider": "openai",
+    "rewrite_mode_model": "gpt-4o-mini",
+    "rewrite_mode_sync": True,
+
+    # Custom Dictionary
+    "custom_dictionary_entries": [],
+
     # Misc
     "show_in_taskbar": True,
     "start_with_windows": False,
@@ -305,6 +323,105 @@ class SettingsStore:
     def start_with_windows(self, value: bool) -> None:
         self.set("start_with_windows", value)
         _apply_startup_registry(value)
+
+    # --- Command Mode Settings ---
+    @property
+    def command_mode_enabled(self) -> bool:
+        return bool(self._data.get("command_mode_enabled", DEFAULTS["command_mode_enabled"]))
+
+    @command_mode_enabled.setter
+    def command_mode_enabled(self, value: bool) -> None:
+        self.set("command_mode_enabled", value)
+
+    @property
+    def command_mode_hotkey(self) -> str:
+        return self._data.get("command_mode_hotkey", DEFAULTS["command_mode_hotkey"])
+
+    @command_mode_hotkey.setter
+    def command_mode_hotkey(self, value: str) -> None:
+        self.set("command_mode_hotkey", value)
+
+    @property
+    def command_mode_provider(self) -> str:
+        return self._data.get("command_mode_provider", DEFAULTS["command_mode_provider"])
+
+    @command_mode_provider.setter
+    def command_mode_provider(self, value: str) -> None:
+        self.set("command_mode_provider", value)
+
+    @property
+    def command_mode_model(self) -> str:
+        return self._data.get("command_mode_model", DEFAULTS["command_mode_model"])
+
+    @command_mode_model.setter
+    def command_mode_model(self, value: str) -> None:
+        self.set("command_mode_model", value)
+
+    @property
+    def command_mode_sync(self) -> bool:
+        return bool(self._data.get("command_mode_sync", DEFAULTS["command_mode_sync"]))
+
+    @command_mode_sync.setter
+    def command_mode_sync(self, value: bool) -> None:
+        self.set("command_mode_sync", value)
+
+    @property
+    def command_mode_confirm(self) -> bool:
+        return bool(self._data.get("command_mode_confirm", DEFAULTS["command_mode_confirm"]))
+
+    @command_mode_confirm.setter
+    def command_mode_confirm(self, value: bool) -> None:
+        self.set("command_mode_confirm", value)
+
+    # --- Edit Mode Settings ---
+    @property
+    def rewrite_mode_enabled(self) -> bool:
+        return bool(self._data.get("rewrite_mode_enabled", DEFAULTS["rewrite_mode_enabled"]))
+
+    @rewrite_mode_enabled.setter
+    def rewrite_mode_enabled(self, value: bool) -> None:
+        self.set("rewrite_mode_enabled", value)
+
+    @property
+    def rewrite_mode_hotkey(self) -> str:
+        return self._data.get("rewrite_mode_hotkey", DEFAULTS["rewrite_mode_hotkey"])
+
+    @rewrite_mode_hotkey.setter
+    def rewrite_mode_hotkey(self, value: str) -> None:
+        self.set("rewrite_mode_hotkey", value)
+
+    @property
+    def rewrite_mode_provider(self) -> str:
+        return self._data.get("rewrite_mode_provider", DEFAULTS["rewrite_mode_provider"])
+
+    @rewrite_mode_provider.setter
+    def rewrite_mode_provider(self, value: str) -> None:
+        self.set("rewrite_mode_provider", value)
+
+    @property
+    def rewrite_mode_model(self) -> str:
+        return self._data.get("rewrite_mode_model", DEFAULTS["rewrite_mode_model"])
+
+    @rewrite_mode_model.setter
+    def rewrite_mode_model(self, value: str) -> None:
+        self.set("rewrite_mode_model", value)
+
+    @property
+    def rewrite_mode_sync(self) -> bool:
+        return bool(self._data.get("rewrite_mode_sync", DEFAULTS["rewrite_mode_sync"]))
+
+    @rewrite_mode_sync.setter
+    def rewrite_mode_sync(self, value: bool) -> None:
+        self.set("rewrite_mode_sync", value)
+
+    # --- Custom Dictionary Settings ---
+    @property
+    def custom_dictionary_entries(self) -> list[dict]:
+        return self._data.get("custom_dictionary_entries", DEFAULTS["custom_dictionary_entries"])
+
+    @custom_dictionary_entries.setter
+    def custom_dictionary_entries(self, value: list[dict]) -> None:
+        self.set("custom_dictionary_entries", value)
 
 
 # ---------------------------------------------------------------------------

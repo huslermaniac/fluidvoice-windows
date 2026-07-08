@@ -36,13 +36,11 @@ class HotkeyManager:
     """
 
     def __init__(self) -> None:
-        self.on_start: Callable[[], None] | None = None
+        self.on_start: Callable[[str], None] | None = None
         self.on_stop: Callable[[], None] | None = None
 
         self._active = False
         self._toggle_state = False    # For toggle mode: True = recording
-        self._current_hotkey = ""
-        self._hook_id = None
         self._lock = threading.Lock()
 
     # ------------------------------------------------------------------
@@ -50,68 +48,86 @@ class HotkeyManager:
     # ------------------------------------------------------------------
 
     def start(self) -> None:
-        """Begin listening for the configured hotkey."""
+        """Begin listening for the configured hotkeys."""
         self._active = True
-        self._register_hotkey(settings.hotkey)
+        self._register_hotkeys()
 
     def stop(self) -> None:
         """Stop listening."""
         self._active = False
-        self._unregister_hotkey()
+        self._unregister_hotkeys()
 
     def reload_hotkey(self) -> None:
-        """Re-register after the hotkey setting changes."""
+        """Re-register after the hotkey settings change."""
         if self._active:
-            self._unregister_hotkey()
-            self._register_hotkey(settings.hotkey)
+            self._register_hotkeys()
 
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
 
-    def _register_hotkey(self, hotkey_str: str) -> None:
-        self._unregister_hotkey()
-        self._current_hotkey = hotkey_str
+    def _register_hotkeys(self) -> None:
+        self._unregister_hotkeys()
 
         try:
-            if settings.hold_to_record:
-                # Hold-to-record: separate down/up hooks
-                keyboard.add_hotkey(hotkey_str, self._on_key_down, suppress=False)
-                keyboard.on_release_key(
-                    hotkey_str.split("+")[-1],  # watch release of the last key
-                    self._on_key_up,
-                    suppress=False,
-                )
-            else:
-                # Toggle mode
-                keyboard.add_hotkey(hotkey_str, self._on_toggle, suppress=False)
+            # 1. Primary Dictation Hotkey
+            dictate_hk = settings.hotkey
+            if dictate_hk:
+                if settings.hold_to_record:
+                    keyboard.add_hotkey(dictate_hk, lambda: self._on_key_down("dictate"), suppress=False)
+                    last_key = dictate_hk.split("+")[-1]
+                    keyboard.on_release_key(last_key, self._on_key_up, suppress=False)
+                else:
+                    keyboard.add_hotkey(dictate_hk, lambda: self._on_toggle("dictate"), suppress=False)
 
-            print(f"[HotkeyManager] Registered hotkey: {hotkey_str}")
+            # 2. Command Mode Hotkey
+            if settings.command_mode_enabled:
+                cmd_hk = settings.command_mode_hotkey
+                if cmd_hk:
+                    if settings.hold_to_record:
+                        keyboard.add_hotkey(cmd_hk, lambda: self._on_key_down("command"), suppress=False)
+                        last_key = cmd_hk.split("+")[-1]
+                        keyboard.on_release_key(last_key, self._on_key_up, suppress=False)
+                    else:
+                        keyboard.add_hotkey(cmd_hk, lambda: self._on_toggle("command"), suppress=False)
+
+            # 3. Edit/Rewrite Mode Hotkey
+            if settings.rewrite_mode_enabled:
+                rw_hk = settings.rewrite_mode_hotkey
+                if rw_hk:
+                    if settings.hold_to_record:
+                        keyboard.add_hotkey(rw_hk, lambda: self._on_key_down("rewrite"), suppress=False)
+                        last_key = rw_hk.split("+")[-1]
+                        keyboard.on_release_key(last_key, self._on_key_up, suppress=False)
+                    else:
+                        keyboard.add_hotkey(rw_hk, lambda: self._on_toggle("rewrite"), suppress=False)
+
+            print(f"[HotkeyManager] Registered hotkeys: dictate={dictate_hk}, command={settings.command_mode_hotkey if settings.command_mode_enabled else 'off'}, rewrite={settings.rewrite_mode_hotkey if settings.rewrite_mode_enabled else 'off'}")
         except Exception as e:
-            print(f"[HotkeyManager] Failed to register hotkey '{hotkey_str}': {e}")
+            print(f"[HotkeyManager] Failed to register hotkeys: {e}")
 
-    def _unregister_hotkey(self) -> None:
+    def _unregister_hotkeys(self) -> None:
         try:
             keyboard.unhook_all_hotkeys()
         except Exception:
             pass
 
-    def _on_key_down(self) -> None:
+    def _on_key_down(self, mode: str) -> None:
         with self._lock:
             if not self._active:
                 return
         if self.on_start:
             # Run in thread to avoid blocking keyboard listener
-            threading.Thread(target=self.on_start, daemon=True).start()
+            threading.Thread(target=self.on_start, args=(mode,), daemon=True).start()
 
-    def _on_key_up(self, event) -> None:  # noqa: ANN001
+    def _on_key_up(self, event=None) -> None:
         with self._lock:
             if not self._active:
                 return
         if self.on_stop:
             threading.Thread(target=self.on_stop, daemon=True).start()
 
-    def _on_toggle(self) -> None:
+    def _on_toggle(self, mode: str) -> None:
         with self._lock:
             if not self._active:
                 return
@@ -120,7 +136,7 @@ class HotkeyManager:
 
         if starting:
             if self.on_start:
-                threading.Thread(target=self.on_start, daemon=True).start()
+                threading.Thread(target=self.on_start, args=(mode,), daemon=True).start()
         else:
             if self.on_stop:
                 threading.Thread(target=self.on_stop, daemon=True).start()

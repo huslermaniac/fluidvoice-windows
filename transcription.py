@@ -387,6 +387,29 @@ def get_recommended_compute_for_cpu() -> str:
 
 
 # ---------------------------------------------------------------------------
+# Custom Dictionary post-replacement helper
+# ---------------------------------------------------------------------------
+
+def apply_custom_dictionary(text: str) -> str:
+    """Apply trigger-to-replacement mappings from settings.custom_dictionary_entries."""
+    import re
+    entries = settings.custom_dictionary_entries
+    if not entries:
+        return text
+
+    result = text
+    for entry in entries:
+        replacement = entry.get("replacement", "")
+        for trigger in entry.get("triggers", []):
+            if not trigger or not trigger.strip():
+                continue
+            # Case-insensitive word boundary replacement
+            pattern = r"\b" + re.escape(trigger.strip()) + r"\b"
+            result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+    return result
+
+
+# ---------------------------------------------------------------------------
 # TranscriptionService
 # ---------------------------------------------------------------------------
 
@@ -401,7 +424,10 @@ class TranscriptionService:
     def __init__(self) -> None:
         self._model = None
         self._model_name: str | None = None
-        self._lock = threading.Lock()
+        self._lock = threading.Lock()        # guards model load/unload lifecycle
+        self._infer_lock = threading.Lock()  # separate lock for inference — allows
+                                             # streaming preview + final to run without
+                                             # serializing on the same lock
         self._loading = False
         self.on_progress_callback: Callable[[str], None] | None = None
 
@@ -516,9 +542,20 @@ class TranscriptionService:
         if on_progress:
             on_progress("Transcribing…")
 
+        # Load trigger vocabulary for Whisper initial_prompt boosting
+        triggers = []
+        for entry in settings.custom_dictionary_entries:
+            triggers.extend(entry.get("triggers", []))
+        initial_prompt = ", ".join(t for t in triggers if t) if triggers else None
+
         try:
             lang = settings.language  # None = auto-detect
-            with self._lock:
+            # NOTE: faster-whisper returns a *lazy generator* from transcribe().
+            # The actual CTranslate2 inference runs during iteration, NOT at the
+            # transcribe() call. Both the call AND the full iteration must stay
+            # inside _infer_lock so two threads never execute inside the model
+            # simultaneously (CTranslate2 is not thread-safe for concurrent infer).
+            with self._infer_lock:
                 if fast_mode:
                     # Optimized greedy decoding parameters for real-time preview (no retry loops)
                     segments, _info = model.transcribe(
@@ -530,6 +567,7 @@ class TranscriptionService:
                         compression_ratio_threshold=None,
                         log_prob_threshold=None,
                         no_speech_threshold=None,
+                        initial_prompt=initial_prompt,
                         vad_filter=True,
                         vad_parameters=dict(min_silence_duration_ms=250),
                     )
@@ -539,13 +577,61 @@ class TranscriptionService:
                         audio,
                         language=lang,
                         beam_size=5,
+                        initial_prompt=initial_prompt,
                         vad_filter=True,
                         vad_parameters=dict(min_silence_duration_ms=300),
                     )
-            text = " ".join(seg.text.strip() for seg in segments).strip()
-            return text
+                # Eagerly materialise inside the lock — inference runs here.
+                text = " ".join(seg.text.strip() for seg in segments).strip()
+            return apply_custom_dictionary(text)
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {e}") from e
+
+    def transcribe_file(
+        self,
+        file_path: str,
+        on_progress: Optional[Callable[[float], None]] = None,
+    ) -> str:
+        """
+        Transcribe an audio file from disk. Reuses the active WhisperModel.
+        Iterates over segment generator to provide progress updates.
+        """
+        with self._lock:
+            self.ensure_model_loaded()
+            model = self._model
+
+        # Extract triggers
+        triggers = []
+        for entry in settings.custom_dictionary_entries:
+            triggers.extend(entry.get("triggers", []))
+        initial_prompt = ", ".join(t for t in triggers if t) if triggers else None
+
+        lang = settings.language
+
+        try:
+            with self._lock:
+                segments, info = model.transcribe(
+                    file_path,
+                    language=lang,
+                    beam_size=5,
+                    initial_prompt=initial_prompt,
+                    vad_filter=True,
+                    vad_parameters=dict(min_silence_duration_ms=300),
+                )
+            
+            text_segments = []
+            duration = info.duration if info and info.duration > 0 else 1.0
+            
+            for seg in segments:
+                text_segments.append(seg.text.strip())
+                if on_progress:
+                    prog = min(1.0, seg.end / duration)
+                    on_progress(prog)
+            
+            raw_text = " ".join(text_segments).strip()
+            return apply_custom_dictionary(raw_text)
+        except Exception as e:
+            raise RuntimeError(f"File transcription failed: {e}") from e
 
     # ------------------------------------------------------------------
     # Background load helper

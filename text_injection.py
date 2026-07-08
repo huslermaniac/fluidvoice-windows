@@ -112,6 +112,46 @@ class TextInjectionService:
         except Exception as e:
             print(f"[TextInjection] Typing failed: {e}")
 
+    def get_selected_text(self) -> str:
+        """
+        Retrieves the currently selected text by simulating Ctrl+C and returning the clipboard content.
+        Safely restores the original clipboard content afterwards.
+
+        Important: called immediately after a hotkey release (e.g. ctrl+alt+e for rewrite mode).
+        We must release all modifier keys and wait for the OS to settle before sending Ctrl+C,
+        otherwise pyautogui fires Ctrl+Alt+C (with Alt still physically held) which corrupts
+        the clipboard capture or accidentally triggers other hotkeys.
+        """
+        # Release all modifiers and give the OS time to register them as up.
+        self._release_modifiers()
+        time.sleep(0.15)   # Wait for OS to process modifier releases
+
+        with self._clipboard_lock:
+            try:
+                original = pyperclip.paste()
+            except Exception:
+                original = ""
+
+            try:
+                pyperclip.copy("")
+                time.sleep(0.05)
+
+                # Now safe to send Ctrl+C — no modifiers are held
+                pyautogui.hotkey("ctrl", "c")
+                time.sleep(0.20)  # Wait for Windows clipboard to capture
+
+                selected = pyperclip.paste()
+            except Exception as e:
+                print(f"[TextInjection] Get selected text failed: {e}")
+                selected = ""
+            finally:
+                try:
+                    pyperclip.copy(original)
+                except Exception:
+                    pass
+
+            return selected if selected else ""
+
 
 # ---------------------------------------------------------------------------
 # Singleton

@@ -66,8 +66,8 @@ class OverlayWindow:
     # Public API (thread-safe — delegates to main thread via after())
     # ------------------------------------------------------------------
 
-    def show_recording(self) -> None:
-        self._root.after(0, self._show_recording_impl)
+    def show_recording(self, mode: str = "dictate") -> None:
+        self._root.after(0, lambda: self._show_recording_impl(mode))
 
     def show_transcribing(self) -> None:
         self._root.after(0, self._show_transcribing_impl)
@@ -217,14 +217,25 @@ class OverlayWindow:
             canvas.create_line(x0, y0 + r, x0, y1 - r, fill=outline_color)
             canvas.create_line(x1 - 1, y0 + r, x1 - 1, y1 - r, fill=outline_color)
 
-    def _show_recording_impl(self) -> None:
+    def _show_recording_impl(self, mode: str = "dictate") -> None:
         self._ensure_window()
         self._stop_dot_animation()
-        self._update_overlay_layout("Listening…", RECORDING_COLOR)
+
+        if mode == "command":
+            text = "Command Mode… Speak your command"
+            color = "#ff7a45"  # Orange/coral for command mode
+        elif mode == "rewrite":
+            text = "Edit Mode… Speak rewrite instructions"
+            color = ACCENT_COLOR  # Purple/blue for rewrite mode
+        else:
+            text = "Listening…"
+            color = RECORDING_COLOR  # Red for dictation
+
+        self._update_overlay_layout(text, color)
         self._fade_to(0.92)
         # Pass current geometry width for dot anim
         width = self._win.winfo_width()
-        self._start_dot_animation(RECORDING_COLOR, width)
+        self._start_dot_animation(color, width)
 
     def _show_transcribing_impl(self) -> None:
         self._ensure_window()
@@ -262,7 +273,12 @@ class OverlayWindow:
         x = (sw - width) // 2
         y = sh - height - MARGIN_BOTTOM
         self._win.geometry(f"{width}x{height}+{x}+{y}")
-        self._rebuild_canvas(width, height)
+        # Only rebuild the canvas widget when dimensions actually change.
+        # Rebuilding every frame causes unnecessary flicker and CPU churn.
+        current_w = self._canvas.winfo_width() if self._canvas else 0
+        current_h = self._canvas.winfo_height() if self._canvas else 0
+        if current_w != width or current_h != height:
+            self._rebuild_canvas(width, height)
 
     # ------------------------------------------------------------------
     # Fade animation
@@ -277,7 +293,9 @@ class OverlayWindow:
             self._visible = True
             if self._win:
                 self._win.deiconify()
-                self._win.lift()
+                # Keep window on top but do NOT call lift() or focus_force() —
+                # those can steal keyboard focus from the user's active app on Windows,
+                # causing Ctrl+V to paste into the overlay instead of the target window.
                 self._win.attributes("-topmost", True)
         self._fade_step()
 
