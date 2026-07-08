@@ -11,10 +11,14 @@ This is a Windows port of [FluidVoice](https://github.com/altic-dev/FluidVoice) 
 
 - 🎙 **On-device transcription** — Whisper runs fully locally, no internet required
 - ⌨ **Works in any app** — text is pasted directly into whatever window is focused
-- ⚡ **Global hotkey** — hold or toggle from anywhere on your PC
+- ⚡ **Global hotkeys** — separate hotkeys for primary dictation, Command Mode, and Edit/Rewrite Mode
+- 🤖 **Command Mode** — dictate commands directly to execute system actions or LLM prompts
+- ✍️ **Edit/Rewrite Mode** — highlight text and use voice instructions to edit, rewrite, or format it
+- 📖 **Custom Dictionary** — configure custom word mapping triggers and replacements
 - 🔔 **System tray** — lives in the taskbar tray, always accessible
-- ✨ **AI Enhancement** — optional post-processing via OpenAI or Groq API
-- 📋 **History & Stats** — local history of all transcriptions
+- ✨ **AI Enhancement** — optional post-processing via OpenAI, Groq, or local Ollama API
+- 📋 **Transcription History** — view, copy, and manage historical transcriptions
+- 🤖 **Agentic Pipeline** — built-in local CrewAI + Ollama (Ornith 9B) code review/auditing pipeline
 - 🌙 **Dark mode UI** — beautiful customtkinter dark interface
 
 ---
@@ -83,12 +87,14 @@ Models are downloaded once on first use into `%APPDATA%\FluidVoice\models\`.
 
 Right-click the tray icon → **Open Settings** to configure:
 
-- **Hotkey** — click "Record Hotkey" and press your desired shortcut
-- **Recording Mode** — hold-to-record or toggle
-- **Whisper Model** — change model size
-- **Audio Device** — select your microphone
-- **AI Enhancement** — add an OpenAI or Groq API key for smarter post-processing
+- **Hotkeys** — configure separate shortcuts for Dictation, Command Mode, and Edit/Rewrite Mode
+- **Recording Mode** — hold-to-record or toggle for all hotkeys
+- **Whisper Model** — change local model size
+- **Audio Device** — select your input microphone
+- **AI Enhancement** — set up OpenAI, Groq, or custom/Ollama base URLs and models
 - **Text Injection** — clipboard paste (recommended) or simulate typing
+- **Custom Dictionary** — configure custom triggers (e.g. abbreviations) to map to full phrases
+- **Transcription History** — review, copy, or clear past dictations
 - **Start with Windows** — auto-launch at login
 
 ---
@@ -102,6 +108,15 @@ Add your API key in Settings → AI tab.
 | OpenAI | platform.openai.com | `gpt-4o-mini` |
 | Groq | console.groq.com | `llama-3.1-8b-instant` |
 | Custom | your endpoint | configurable |
+
+## Local AI Auditing Pipeline (Experimental)
+
+To run a self-scaffolded codebase integrity audit using local Ollama:
+1. Ensure Ollama is running and has the `ornith:9b-q4_K_M` model pulled.
+2. Run the audit agent:
+   ```bat
+   python crew_agent.py
+   ```
 
 ---
 
